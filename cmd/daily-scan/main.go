@@ -27,30 +27,16 @@ func main() {
 	domainChecker := checker.New()
 	var allAvailable []models.DomainResult
 
-	// Scan 1-char domains (no prefix needed)
-	fmt.Println("Scanning 1-char domains...")
-	domains1 := checker.GenerateShortDomainsMultiTLD(1, "")
-	results1 := domainChecker.CheckBulkHybrid(domains1)
-	for _, r := range results1 {
+	// Scan 1-char domains only (36 names × 24 TLDs = 864 domains)
+	fmt.Println("Scanning 1-char domains across 24 TLDs...")
+	domains := checker.GenerateShortDomainsMultiTLD(1, "")
+	fmt.Printf("Checking %d domains...\n", len(domains))
+
+	results := domainChecker.CheckBulkHybrid(domains)
+	for _, r := range results {
 		if r.Status == models.StatusAvailable {
 			allAvailable = append(allAvailable, r)
 		}
-	}
-	fmt.Printf("  Found %d available\n", countAvailable(results1))
-
-	// Scan 2-char domains with common prefixes
-	prefixes2 := []string{"a", "b", "c", "x", "z", "0", "1"}
-	for _, prefix := range prefixes2 {
-		fmt.Printf("Scanning 2-char domains (prefix: %s)...\n", prefix)
-		domains2 := checker.GenerateShortDomainsMultiTLD(2, prefix)
-		results2 := domainChecker.CheckBulkHybrid(domains2)
-		for _, r := range results2 {
-			if r.Status == models.StatusAvailable {
-				allAvailable = append(allAvailable, r)
-			}
-		}
-		fmt.Printf("  Found %d available\n", countAvailable(results2))
-		time.Sleep(2 * time.Second) // Rate limiting between batches
 	}
 
 	fmt.Printf("\n✅ Total available domains found: %d\n", len(allAvailable))
@@ -68,15 +54,6 @@ func main() {
 	}
 }
 
-func countAvailable(results []models.DomainResult) int {
-	count := 0
-	for _, r := range results {
-		if r.Status == models.StatusAvailable {
-			count++
-		}
-	}
-	return count
-}
 
 func sendEmail(apiKey, to string, domains []models.DomainResult) error {
 	// Group domains by TLD for better readability
