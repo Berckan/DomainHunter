@@ -3,10 +3,12 @@ package checker
 import (
 	"context"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/berckan/domainhunter/internal/models"
+	"github.com/likexian/whois"
 )
 
 // Checker handles domain availability checks
@@ -29,8 +31,55 @@ func New() *Checker {
 	}
 }
 
-// Check verifies if a single domain is available
+// Patterns that indicate domain is NOT registered (available)
+var availablePatterns = []string{
+	"no match for",
+	"not found",
+	"no entries found",
+	"domain not found",
+	"no data found",
+	"status: free",
+	"status: available",
+	"no object found",
+	"object does not exist",
+	"nothing found",
+	"no information available",
+	"is available for registration",
+	"is free",
+	"domain is available",
+	"the queried object does not exist",
+}
+
+// Check verifies if a single domain is available using WHOIS
 func (c *Checker) Check(domain string) models.DomainResult {
+	result := models.DomainResult{
+		Domain:    domain,
+		CheckedAt: time.Now(),
+	}
+
+	// Try WHOIS lookup
+	whoisResult, err := whois.Whois(domain)
+	if err != nil {
+		// WHOIS failed, fallback to DNS check
+		return c.checkDNS(domain)
+	}
+
+	// Check if response indicates domain is available
+	whoisLower := strings.ToLower(whoisResult)
+	for _, pattern := range availablePatterns {
+		if strings.Contains(whoisLower, pattern) {
+			result.Status = models.StatusAvailable
+			return result
+		}
+	}
+
+	// If we got a WHOIS response without "not found" patterns, it's taken
+	result.Status = models.StatusTaken
+	return result
+}
+
+// checkDNS is the fallback DNS-based check
+func (c *Checker) checkDNS(domain string) models.DomainResult {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
@@ -39,36 +88,37 @@ func (c *Checker) Check(domain string) models.DomainResult {
 		CheckedAt: time.Now(),
 	}
 
-	// Try to resolve the domain
 	_, err := c.resolver.LookupHost(ctx, domain)
 	if err != nil {
-		// DNS error usually means domain is available or doesn't exist
 		if dnsErr, ok := err.(*net.DNSError); ok {
 			if dnsErr.IsNotFound {
 				result.Status = models.StatusAvailable
 				return result
 			}
 		}
-		// Could be available, but we're not 100% sure
 		result.Status = models.StatusAvailable
 		return result
 	}
 
-	// Domain resolves, so it's taken
 	result.Status = models.StatusTaken
 	return result
 }
 
-// CheckBulk checks multiple domains concurrently
+// CheckBulk checks multiple domains with limited concurrency (WHOIS rate limiting)
 func (c *Checker) CheckBulk(domains []string) []models.DomainResult {
 	results := make([]models.DomainResult, len(domains))
 	var wg sync.WaitGroup
+
+	// Limit concurrency to 5 to avoid WHOIS rate limiting
+	semaphore := make(chan struct{}, 5)
 
 	for i, domain := range domains {
 		wg.Add(1)
 		go func(idx int, d string) {
 			defer wg.Done()
+			semaphore <- struct{}{}        // acquire
 			results[idx] = c.Check(d)
+			<-semaphore                    // release
 		}(i, domain)
 	}
 
