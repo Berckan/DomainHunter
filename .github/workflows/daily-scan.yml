@@ -2,8 +2,8 @@ name: Daily Domain Scan
 
 on:
   schedule:
-    # Runs at 8:00 AM UTC every day
-    - cron: '0 8 * * *'
+    # Runs at 10:00 AM Europe/Madrid every day (9:00 UTC)
+    - cron: '0 9 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
