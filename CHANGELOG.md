@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026.01.06] - v0.3.0
+
+### Added
+- Production deployment on Fly.io (Frankfurt region)
+  WHY: Make the app publicly accessible for portfolio showcase
+- Dockerfile with multi-stage build (9.3MB final image)
+  WHY: Efficient container for fast deployments
+
+---
+
 ## [2026.01.06] - v0.2.0
 
 ### Added

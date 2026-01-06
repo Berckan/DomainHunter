@@ -2,6 +2,8 @@
 
 A fast, concurrent domain availability checker built with Go and HTMX.
 
+**Live:** https://domain-hunter.fly.dev/
+
 ## Features
 
 - **Real-time checking** - Instant feedback via HTMX
@@ -48,9 +50,9 @@ domainhunter/
 
 ## Roadmap
 
-- [ ] Basic domain availability check
-- [ ] Bulk domain checking
-- [ ] Short domain scanner (2-3 chars)
+- [x] Basic domain availability check
+- [x] Bulk domain checking
+- [x] Short domain scanner (2-3 chars)
 - [ ] Watch list with persistence
 - [ ] Email/webhook notifications
 - [ ] WHOIS information display
