@@ -3,13 +3,15 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/berckan/domainhunter/internal/checker"
+	"github.com/berckan/domainhunter/internal/models"
 )
 
 var (
-	templates = template.Must(template.ParseGlob("web/templates/*.html"))
+	templates     = template.Must(template.ParseGlob("web/templates/*.html"))
 	domainChecker = checker.New()
 )
 
@@ -77,4 +79,74 @@ func CheckBulk(w http.ResponseWriter, r *http.Request) {
 
 	results := domainChecker.CheckBulk(domains)
 	templates.ExecuteTemplate(w, "results-bulk.html", results)
+}
+
+// ScanShort scans short domains (2-3 chars) and returns only available ones
+func ScanShort(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	lengthStr := r.FormValue("length")
+	tld := strings.TrimSpace(r.FormValue("tld"))
+	prefix := strings.ToLower(strings.TrimSpace(r.FormValue("prefix")))
+
+	length, err := strconv.Atoi(lengthStr)
+	if err != nil || length < 1 || length > 3 {
+		http.Error(w, "Length must be 1, 2, or 3", http.StatusBadRequest)
+		return
+	}
+
+	if tld == "" {
+		tld = "com"
+	}
+	tld = strings.TrimPrefix(tld, ".")
+
+	// Generate domains
+	domains := checker.GenerateShortDomains(length, tld)
+
+	// Filter by prefix if provided
+	if prefix != "" {
+		var filtered []string
+		for _, d := range domains {
+			if strings.HasPrefix(d, prefix) {
+				filtered = append(filtered, d)
+			}
+		}
+		domains = filtered
+	}
+
+	// Limit to prevent abuse (max 500 domains per scan)
+	if len(domains) > 500 {
+		domains = domains[:500]
+	}
+
+	if len(domains) == 0 {
+		templates.ExecuteTemplate(w, "scan-empty.html", nil)
+		return
+	}
+
+	// Check all domains concurrently
+	allResults := domainChecker.CheckBulk(domains)
+
+	// Filter only available domains
+	var available []models.DomainResult
+	for _, r := range allResults {
+		if r.Status == models.StatusAvailable {
+			available = append(available, r)
+		}
+	}
+
+	data := struct {
+		Available []models.DomainResult
+		Total     int
+		Checked   int
+	}{
+		Available: available,
+		Total:     len(available),
+		Checked:   len(domains),
+	}
+
+	templates.ExecuteTemplate(w, "scan-results.html", data)
 }

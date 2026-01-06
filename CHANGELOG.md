@@ -1,5 +1,17 @@
 # Changelog
 
+## [2026.01.06] - v0.2.0
+
+### Added
+- Short Domain Scanner feature
+  WHY: Core differentiator - find available 1-3 character domains across TLDs
+- Prefix filtering for scanner
+  WHY: Reduces search space and allows targeted domain hunting
+- Multiple TLD support (.com, .io, .dev, .co, .ai, .app)
+  WHY: Modern TLDs are popular for tech projects and startups
+
+---
+
 ## [2026.01.06] - v0.1.0
 
 ### Added

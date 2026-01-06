@@ -1,0 +1,23 @@
+{{define "scan-results.html"}}
+<div class="space-y-4">
+    <div class="flex items-center justify-between text-sm text-gray-400 mb-4">
+        <span>Found <span class="text-hunter-500 font-bold">{{.Total}}</span> available</span>
+        <span>Checked {{.Checked}} domains</span>
+    </div>
+
+    {{if .Available}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {{range .Available}}
+        <div class="p-3 bg-hunter-900/30 border border-hunter-500/50 rounded-lg text-center">
+            <span class="font-mono text-hunter-400">{{.Domain}}</span>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <div class="p-6 bg-gray-900 border border-gray-800 rounded-lg text-center">
+        <p class="text-gray-400">No available domains found in this range.</p>
+        <p class="text-gray-500 text-sm mt-2">Try a different TLD or prefix.</p>
+    </div>
+    {{end}}
+</div>
+{{end}}

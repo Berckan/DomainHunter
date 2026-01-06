@@ -88,6 +88,65 @@
             <div id="bulk-results" class="mt-4"></div>
         </section>
 
+        <!-- Short Domain Scanner -->
+        <section class="mb-12">
+            <h2 class="text-xl font-semibold mb-4">Short Domain Scanner</h2>
+            <p class="text-gray-400 text-sm mb-4">Find available 1-3 character domains</p>
+            <form hx-post="/scan-short"
+                  hx-target="#scan-results"
+                  hx-swap="innerHTML"
+                  hx-indicator="#scan-loading"
+                  class="space-y-4">
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Length</label>
+                        <select
+                            name="length"
+                            class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-hunter-500 transition-colors"
+                        >
+                            <option value="1">1 char (36)</option>
+                            <option value="2" selected>2 chars (1,296)</option>
+                            <option value="3">3 chars (limited)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">TLD</label>
+                        <select
+                            name="tld"
+                            class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-hunter-500 transition-colors"
+                        >
+                            <option value="com">.com</option>
+                            <option value="io">.io</option>
+                            <option value="dev">.dev</option>
+                            <option value="co">.co</option>
+                            <option value="ai">.ai</option>
+                            <option value="app">.app</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Prefix (optional)</label>
+                        <input
+                            type="text"
+                            name="prefix"
+                            placeholder="a, b, xy..."
+                            maxlength="2"
+                            class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-hunter-500 transition-colors"
+                        >
+                    </div>
+                </div>
+                <button
+                    type="submit"
+                    class="w-full px-6 py-3 bg-hunter-600 hover:bg-hunter-700 rounded-lg font-medium transition-colors"
+                >
+                    Scan for Available Domains
+                </button>
+            </form>
+            <div id="scan-loading" class="htmx-indicator mt-4 text-gray-400">
+                Scanning domains... This may take a moment.
+            </div>
+            <div id="scan-results" class="mt-4"></div>
+        </section>
+
         <footer class="text-center text-gray-600 text-sm">
             <p>Part of <a href="https://github.com/berckan/StackQuest" class="text-hunter-500 hover:underline">StackQuest 2026</a></p>
         </footer>
