@@ -31,6 +31,7 @@
                 <span class="text-hunter-500">Domain</span> Hunter
             </h1>
             <p class="text-gray-400">Fast, concurrent domain availability checker</p>
+            <p class="text-yellow-500/70 text-xs mt-2">⚠️ DNS-based check only. Verify with registrar before purchasing.</p>
         </header>
 
         <!-- Single Domain Check -->
@@ -86,6 +87,36 @@
                 Checking domains...
             </div>
             <div id="bulk-results" class="mt-4"></div>
+        </section>
+
+        <!-- Multi-TLD Search -->
+        <section class="mb-12">
+            <h2 class="text-xl font-semibold mb-4">Multi-TLD Search</h2>
+            <p class="text-gray-400 text-sm mb-4">Check a name across 100+ TLDs at once</p>
+            <form hx-post="/check-multitld"
+                  hx-target="#multitld-results"
+                  hx-swap="innerHTML"
+                  hx-indicator="#multitld-loading"
+                  class="flex gap-2">
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="yourname"
+                    class="flex-1 px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-hunter-500 transition-colors"
+                    autocomplete="off"
+                    required
+                >
+                <button
+                    type="submit"
+                    class="px-6 py-3 bg-hunter-600 hover:bg-hunter-700 rounded-lg font-medium transition-colors"
+                >
+                    Search All TLDs
+                </button>
+            </form>
+            <div id="multitld-loading" class="htmx-indicator mt-4 text-gray-400">
+                Checking 100+ TLDs...
+            </div>
+            <div id="multitld-results" class="mt-4 max-h-96 overflow-y-auto"></div>
         </section>
 
         <!-- Short Domain Scanner -->

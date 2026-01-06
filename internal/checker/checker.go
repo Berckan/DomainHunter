@@ -76,6 +76,44 @@ func (c *Checker) CheckBulk(domains []string) []models.DomainResult {
 	return results
 }
 
+// CommonTLDs is a list of popular TLDs to check
+var CommonTLDs = []string{
+	// Generic
+	"com", "net", "org", "info", "biz", "name", "pro",
+	// Tech
+	"io", "dev", "app", "ai", "tech", "code", "software", "digital", "cloud", "data", "systems",
+	// New gTLDs
+	"co", "me", "tv", "cc", "fm", "gg", "xyz", "online", "site", "website", "web",
+	"store", "shop", "buy", "sale", "market",
+	"blog", "news", "media", "press", "video", "photos",
+	"design", "studio", "art", "gallery", "agency", "creative",
+	"live", "life", "world", "global", "international",
+	"club", "social", "community", "network", "group", "team",
+	"email", "link", "click", "page", "space", "zone", "one",
+	// Country codes - Americas
+	"us", "ca", "mx", "br", "ar", "cl", "co", "pe", "ve",
+	// Country codes - Europe
+	"uk", "de", "fr", "es", "it", "nl", "be", "ch", "at", "pl", "pt", "ie", "se", "no", "dk", "fi", "cz", "hu", "ro", "gr", "ru", "ua",
+	// Country codes - Asia/Pacific
+	"jp", "cn", "kr", "in", "au", "nz", "sg", "hk", "tw", "th", "my", "ph", "id", "vn",
+	// Country codes - Other
+	"za", "ae", "il", "tr", "eg", "ng", "ke",
+	// Premium/Short
+	"to", "is", "so", "sh", "sx", "vc", "ws", "la", "ly", "gl", "im", "ht", "mu", "nu", "pw", "tk",
+}
+
+// GenerateMultiTLD generates the same name across multiple TLDs
+func GenerateMultiTLD(name string, tlds []string) []string {
+	if tlds == nil {
+		tlds = CommonTLDs
+	}
+	domains := make([]string, len(tlds))
+	for i, tld := range tlds {
+		domains[i] = name + "." + tld
+	}
+	return domains
+}
+
 // GenerateShortDomains generates all possible domains of given length
 func GenerateShortDomains(length int, tld string) []string {
 	if length < 1 || length > 3 {

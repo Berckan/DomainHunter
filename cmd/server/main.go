@@ -23,6 +23,7 @@ func main() {
 	http.HandleFunc("/check", handlers.CheckDomain)
 	http.HandleFunc("/check-bulk", handlers.CheckBulk)
 	http.HandleFunc("/scan-short", handlers.ScanShort)
+	http.HandleFunc("/check-multitld", handlers.CheckMultiTLD)
 
 	log.Printf("Server starting on http://localhost:%s", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

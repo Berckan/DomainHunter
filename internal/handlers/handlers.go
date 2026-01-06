@@ -150,3 +150,30 @@ func ScanShort(w http.ResponseWriter, r *http.Request) {
 
 	templates.ExecuteTemplate(w, "scan-results.html", data)
 }
+
+// CheckMultiTLD checks a domain name across all common TLDs
+func CheckMultiTLD(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	name := strings.ToLower(strings.TrimSpace(r.FormValue("name")))
+	if name == "" {
+		http.Error(w, "Name is required", http.StatusBadRequest)
+		return
+	}
+
+	// Remove any TLD if user included one
+	if idx := strings.Index(name, "."); idx != -1 {
+		name = name[:idx]
+	}
+
+	// Generate domains across all TLDs
+	domains := checker.GenerateMultiTLD(name, nil)
+
+	// Check all concurrently
+	results := domainChecker.CheckBulk(domains)
+
+	templates.ExecuteTemplate(w, "results-multitld.html", results)
+}

@@ -1,0 +1,29 @@
+{{define "results-multitld.html"}}
+<div class="space-y-2">
+    <p class="text-sm text-gray-400 mb-4">Checked {{len .}} TLDs</p>
+
+    <!-- Available first -->
+    {{range .}}
+    {{if eq .Status "available"}}
+    <div class="p-3 rounded-lg flex items-center justify-between bg-hunter-900/30 border border-hunter-500/50">
+        <span class="font-mono">{{.Domain}}</span>
+        <span class="px-2 py-0.5 rounded text-xs font-medium bg-hunter-500 text-hunter-900">
+            Available
+        </span>
+    </div>
+    {{end}}
+    {{end}}
+
+    <!-- Taken after -->
+    {{range .}}
+    {{if eq .Status "taken"}}
+    <div class="p-3 rounded-lg flex items-center justify-between bg-gray-900/50 border border-gray-800">
+        <span class="font-mono text-gray-500">{{.Domain}}</span>
+        <span class="px-2 py-0.5 rounded text-xs font-medium bg-gray-700 text-gray-400">
+            Taken
+        </span>
+    </div>
+    {{end}}
+    {{end}}
+</div>
+{{end}}
