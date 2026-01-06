@@ -1,6 +1,10 @@
 {{define "scan-empty.html"}}
 <div class="p-6 bg-yellow-900/30 border border-yellow-500/50 rounded-lg text-center">
+    {{if .Message}}
+    <p class="text-yellow-400">{{.Message}}</p>
+    {{else}}
     <p class="text-yellow-400">No domains to check with the given parameters.</p>
     <p class="text-gray-500 text-sm mt-2">Try adjusting your prefix or length.</p>
+    {{end}}
 </div>
 {{end}}

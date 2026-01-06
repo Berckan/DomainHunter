@@ -126,6 +126,13 @@ func (c *Checker) CheckBulk(domains []string) []models.DomainResult {
 	return results
 }
 
+// PremiumTLDs is a curated list of valuable TLDs for short domain scanning
+var PremiumTLDs = []string{
+	"com", "net", "org", "io", "dev", "app", "ai", "co",
+	"me", "tv", "gg", "so", "to", "is", "sh", "ly",
+	"de", "uk", "es", "fr", "it", "nl", "ch", "at",
+}
+
 // CommonTLDs is a list of popular TLDs to check
 var CommonTLDs = []string{
 	// Generic
@@ -195,4 +202,97 @@ func GenerateShortDomains(length int, tld string) []string {
 	}
 
 	return domains
+}
+
+// GenerateShortDomainsMultiTLD generates short domains across multiple TLDs
+func GenerateShortDomainsMultiTLD(length int, prefix string) []string {
+	if length < 1 || length > 3 {
+		return nil
+	}
+
+	chars := "abcdefghijklmnopqrstuvwxyz0123456789"
+	var names []string
+
+	// Generate names based on length and prefix
+	remainingLen := length - len(prefix)
+	if remainingLen < 0 {
+		return nil
+	}
+
+	switch remainingLen {
+	case 0:
+		names = append(names, prefix)
+	case 1:
+		for _, c := range chars {
+			names = append(names, prefix+string(c))
+		}
+	case 2:
+		for _, c1 := range chars {
+			for _, c2 := range chars {
+				names = append(names, prefix+string(c1)+string(c2))
+			}
+		}
+	case 3:
+		for _, c1 := range chars {
+			for _, c2 := range chars {
+				for _, c3 := range chars {
+					names = append(names, prefix+string(c1)+string(c2)+string(c3))
+				}
+			}
+		}
+	}
+
+	// Generate domains across all premium TLDs
+	var domains []string
+	for _, name := range names {
+		for _, tld := range PremiumTLDs {
+			domains = append(domains, name+"."+tld)
+		}
+	}
+
+	return domains
+}
+
+// CheckBulkHybrid uses DNS first (fast), then WHOIS to confirm candidates
+func (c *Checker) CheckBulkHybrid(domains []string) []models.DomainResult {
+	// Phase 1: Fast DNS check (high concurrency)
+	dnsResults := make([]models.DomainResult, len(domains))
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, 50) // High concurrency for DNS
+
+	for i, domain := range domains {
+		wg.Add(1)
+		go func(idx int, d string) {
+			defer wg.Done()
+			semaphore <- struct{}{}
+			dnsResults[idx] = c.checkDNS(d)
+			<-semaphore
+		}(i, domain)
+	}
+	wg.Wait()
+
+	// Phase 2: WHOIS confirmation for DNS "available" results
+	var candidates []int
+	for i, r := range dnsResults {
+		if r.Status == models.StatusAvailable {
+			candidates = append(candidates, i)
+		}
+	}
+
+	// Confirm with WHOIS (limited concurrency)
+	whoisSem := make(chan struct{}, 5)
+	var wg2 sync.WaitGroup
+
+	for _, idx := range candidates {
+		wg2.Add(1)
+		go func(i int) {
+			defer wg2.Done()
+			whoisSem <- struct{}{}
+			dnsResults[i] = c.Check(domains[i]) // Full WHOIS check
+			<-whoisSem
+		}(idx)
+	}
+	wg2.Wait()
+
+	return dnsResults
 }

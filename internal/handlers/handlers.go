@@ -81,7 +81,7 @@ func CheckBulk(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "results-bulk.html", results)
 }
 
-// ScanShort scans short domains (2-3 chars) and returns only available ones
+// ScanShort scans short domains across ALL premium TLDs
 func ScanShort(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -89,7 +89,6 @@ func ScanShort(w http.ResponseWriter, r *http.Request) {
 	}
 
 	lengthStr := r.FormValue("length")
-	tld := strings.TrimSpace(r.FormValue("tld"))
 	prefix := strings.ToLower(strings.TrimSpace(r.FormValue("prefix")))
 
 	length, err := strconv.Atoi(lengthStr)
@@ -98,37 +97,30 @@ func ScanShort(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if tld == "" {
-		tld = "com"
-	}
-	tld = strings.TrimPrefix(tld, ".")
-
-	// Generate domains
-	domains := checker.GenerateShortDomains(length, tld)
-
-	// Filter by prefix if provided
-	if prefix != "" {
-		var filtered []string
-		for _, d := range domains {
-			if strings.HasPrefix(d, prefix) {
-				filtered = append(filtered, d)
-			}
-		}
-		domains = filtered
+	// Validate prefix requirements based on length
+	// 1 char: no prefix needed (36 names × 24 TLDs = 864)
+	// 2 chars: need 1 char prefix (36 names × 24 TLDs = 864)
+	// 3 chars: need 2 char prefix (36 names × 24 TLDs = 864)
+	minPrefixLen := length - 1
+	if len(prefix) < minPrefixLen {
+		templates.ExecuteTemplate(w, "scan-empty.html", struct {
+			Message string
+		}{
+			Message: "For " + lengthStr + "-char domains, please provide at least " + strconv.Itoa(minPrefixLen) + " character(s) as prefix",
+		})
+		return
 	}
 
-	// Limit to prevent abuse (max 500 domains per scan)
-	if len(domains) > 500 {
-		domains = domains[:500]
-	}
+	// Generate domains across all premium TLDs
+	domains := checker.GenerateShortDomainsMultiTLD(length, prefix)
 
 	if len(domains) == 0 {
 		templates.ExecuteTemplate(w, "scan-empty.html", nil)
 		return
 	}
 
-	// Check all domains concurrently
-	allResults := domainChecker.CheckBulk(domains)
+	// Use hybrid check: DNS fast scan + WHOIS confirmation
+	allResults := domainChecker.CheckBulkHybrid(domains)
 
 	// Filter only available domains
 	var available []models.DomainResult
