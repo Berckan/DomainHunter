@@ -1,0 +1,18 @@
+{{define "results-bulk.html"}}
+<div class="space-y-2">
+    {{range .}}
+    <div class="p-3 rounded-lg flex items-center justify-between
+        {{if eq .Status "available"}}bg-hunter-900/30 border border-hunter-500/50
+        {{else if eq .Status "taken"}}bg-gray-900 border border-gray-800
+        {{else}}bg-yellow-900/30 border border-yellow-500/50{{end}}">
+        <span class="font-mono">{{.Domain}}</span>
+        <span class="px-2 py-0.5 rounded text-xs font-medium
+            {{if eq .Status "available"}}bg-hunter-500 text-hunter-900
+            {{else if eq .Status "taken"}}bg-gray-700 text-gray-300
+            {{else}}bg-yellow-500 text-yellow-900{{end}}">
+            {{if eq .Status "available"}}Available{{else if eq .Status "taken"}}Taken{{else}}Error{{end}}
+        </span>
+    </div>
+    {{end}}
+</div>
+{{end}}

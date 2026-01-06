@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Hunter</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'hunter': {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-16 max-w-2xl">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-2">
+                <span class="text-hunter-500">Domain</span> Hunter
+            </h1>
+            <p class="text-gray-400">Fast, concurrent domain availability checker</p>
+        </header>
+
+        <!-- Single Domain Check -->
+        <section class="mb-12">
+            <h2 class="text-xl font-semibold mb-4">Quick Check</h2>
+            <form hx-post="/check"
+                  hx-target="#result"
+                  hx-swap="innerHTML"
+                  hx-indicator="#loading"
+                  class="flex gap-2">
+                <input
+                    type="text"
+                    name="domain"
+                    placeholder="example.com"
+                    class="flex-1 px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-hunter-500 transition-colors"
+                    autocomplete="off"
+                    required
+                >
+                <button
+                    type="submit"
+                    class="px-6 py-3 bg-hunter-600 hover:bg-hunter-700 rounded-lg font-medium transition-colors"
+                >
+                    Check
+                </button>
+            </form>
+            <div id="loading" class="htmx-indicator mt-4 text-gray-400">
+                Checking...
+            </div>
+            <div id="result" class="mt-4"></div>
+        </section>
+
+        <!-- Bulk Check -->
+        <section class="mb-12">
+            <h2 class="text-xl font-semibold mb-4">Bulk Check</h2>
+            <form hx-post="/check-bulk"
+                  hx-target="#bulk-results"
+                  hx-swap="innerHTML"
+                  hx-indicator="#bulk-loading">
+                <textarea
+                    name="domains"
+                    rows="5"
+                    placeholder="domain1.com&#10;domain2.io&#10;domain3.dev"
+                    class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-hunter-500 transition-colors resize-none mb-2"
+                ></textarea>
+                <button
+                    type="submit"
+                    class="w-full px-6 py-3 bg-hunter-600 hover:bg-hunter-700 rounded-lg font-medium transition-colors"
+                >
+                    Check All
+                </button>
+            </form>
+            <div id="bulk-loading" class="htmx-indicator mt-4 text-gray-400">
+                Checking domains...
+            </div>
+            <div id="bulk-results" class="mt-4"></div>
+        </section>
+
+        <footer class="text-center text-gray-600 text-sm">
+            <p>Part of <a href="https://github.com/berckan/StackQuest" class="text-hunter-500 hover:underline">StackQuest 2026</a></p>
+        </footer>
+    </div>
+</body>
+</html>
