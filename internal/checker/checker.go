@@ -31,6 +31,25 @@ func New() *Checker {
 	}
 }
 
+// Patterns that indicate domain IS registered (taken) - check these FIRST
+var takenPatterns = []string{
+	"registrar:",
+	"registrant:",
+	"creation date:",
+	"created:",
+	"registry expiry date:",
+	"expiration date:",
+	"name server:",
+	"nameserver:",
+	"nserver:",
+	"dnssec:",
+	"registrar iana id:",
+	"domain status:",
+	"admin contact:",
+	"tech contact:",
+	"billing contact:",
+}
+
 // Patterns that indicate domain is NOT registered (available)
 var availablePatterns = []string{
 	"no match for",
@@ -48,6 +67,9 @@ var availablePatterns = []string{
 	"is free",
 	"domain is available",
 	"the queried object does not exist",
+	"no such domain",
+	"domain name has not been registered",
+	"no matching record",
 }
 
 // Check verifies if a single domain is available using WHOIS
@@ -60,12 +82,22 @@ func (c *Checker) Check(domain string) models.DomainResult {
 	// Try WHOIS lookup
 	whoisResult, err := whois.Whois(domain)
 	if err != nil {
-		// WHOIS failed, fallback to DNS check
-		return c.checkDNS(domain)
+		// WHOIS failed - mark as taken (conservative approach)
+		result.Status = models.StatusTaken
+		return result
 	}
 
-	// Check if response indicates domain is available
 	whoisLower := strings.ToLower(whoisResult)
+
+	// FIRST: Check if domain is taken (more reliable)
+	for _, pattern := range takenPatterns {
+		if strings.Contains(whoisLower, pattern) {
+			result.Status = models.StatusTaken
+			return result
+		}
+	}
+
+	// THEN: Check if explicitly marked as available
 	for _, pattern := range availablePatterns {
 		if strings.Contains(whoisLower, pattern) {
 			result.Status = models.StatusAvailable
@@ -73,7 +105,7 @@ func (c *Checker) Check(domain string) models.DomainResult {
 		}
 	}
 
-	// If we got a WHOIS response without "not found" patterns, it's taken
+	// If unclear, assume taken (conservative)
 	result.Status = models.StatusTaken
 	return result
 }
