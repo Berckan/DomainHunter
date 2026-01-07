@@ -66,25 +66,89 @@ func sendEmail(apiKey, to string, domains []models.DomainResult) error {
 		}
 	}
 
-	// Build HTML email
+	// Build HTML email with table-based layout for email clients
 	var html strings.Builder
-	html.WriteString(`<html><body style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">`)
-	html.WriteString(`<h1 style="color: #22c55e;">🎯 Domain Hunter - Daily Report</h1>`)
-	html.WriteString(fmt.Sprintf(`<p style="color: #666;">Found <strong>%d</strong> available domains</p>`, len(domains)))
-	html.WriteString(`<p style="color: #999; font-size: 12px;">` + time.Now().Format("January 2, 2006 at 15:04 MST") + `</p>`)
+	html.WriteString(`<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+
+<!-- Header -->
+<tr>
+<td style="background-color: #14532d; padding: 30px; text-align: center;">
+<h1 style="color: #22c55e; margin: 0; font-family: Arial, sans-serif; font-size: 28px;">🎯 Domain Hunter</h1>
+<p style="color: #86efac; margin: 10px 0 0 0; font-family: Arial, sans-serif; font-size: 14px;">Daily Report</p>
+</td>
+</tr>
+
+<!-- Summary -->
+<tr>
+<td style="padding: 30px; text-align: center; border-bottom: 1px solid #e5e5e5;">
+<p style="font-family: Arial, sans-serif; font-size: 18px; color: #333; margin: 0;">
+Found <strong style="color: #22c55e; font-size: 32px;">`)
+	html.WriteString(fmt.Sprintf("%d", len(domains)))
+	html.WriteString(`</strong> available domains
+</p>
+<p style="font-family: Arial, sans-serif; font-size: 12px; color: #999; margin: 10px 0 0 0;">`)
+	html.WriteString(time.Now().Format("January 2, 2006"))
+	html.WriteString(`</p>
+</td>
+</tr>
+
+<!-- Domains by TLD -->
+<tr>
+<td style="padding: 20px 30px;">
+`)
 
 	for tld, domainList := range byTLD {
-		html.WriteString(fmt.Sprintf(`<h3 style="color: #333; margin-top: 20px;">.%s (%d)</h3>`, tld, len(domainList)))
-		html.WriteString(`<div style="display: flex; flex-wrap: wrap; gap: 8px;">`)
-		for _, domain := range domainList {
-			html.WriteString(fmt.Sprintf(`<span style="background: #f0fdf4; border: 1px solid #22c55e; padding: 4px 8px; border-radius: 4px; font-family: monospace;">%s</span>`, domain))
+		html.WriteString(fmt.Sprintf(`
+<table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+<tr>
+<td style="background-color: #f0fdf4; padding: 10px 15px; border-radius: 6px 6px 0 0; border-left: 4px solid #22c55e;">
+<strong style="font-family: Arial, sans-serif; font-size: 16px; color: #14532d;">.%s</strong>
+<span style="font-family: Arial, sans-serif; font-size: 12px; color: #666; margin-left: 8px;">(%d domains)</span>
+</td>
+</tr>
+<tr>
+<td style="padding: 15px; background-color: #fafafa; border-radius: 0 0 6px 6px;">
+`, tld, len(domainList)))
+
+		for i, domain := range domainList {
+			if i > 0 {
+				html.WriteString(` `)
+			}
+			html.WriteString(fmt.Sprintf(`<code style="display: inline-block; background-color: #ffffff; border: 1px solid #d1d5db; padding: 6px 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 14px; color: #111; margin: 3px;">%s</code>`, domain))
 		}
-		html.WriteString(`</div>`)
+
+		html.WriteString(`
+</td>
+</tr>
+</table>
+`)
 	}
 
-	html.WriteString(`<hr style="margin-top: 30px; border: none; border-top: 1px solid #eee;">`)
-	html.WriteString(`<p style="color: #999; font-size: 12px;">Sent by <a href="https://domain-hunter.fly.dev">Domain Hunter</a> • <a href="https://github.com/Berckan/DomainHunter">GitHub</a></p>`)
-	html.WriteString(`</body></html>`)
+	html.WriteString(`
+</td>
+</tr>
+
+<!-- Footer -->
+<tr>
+<td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e5e5e5;">
+<p style="font-family: Arial, sans-serif; font-size: 12px; color: #999; margin: 0;">
+Sent by <a href="https://domain-hunter.fly.dev" style="color: #22c55e;">Domain Hunter</a> ·
+<a href="https://github.com/Berckan/DomainHunter" style="color: #22c55e;">GitHub</a>
+</p>
+</td>
+</tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`)
 
 	// Resend API payload
 	payload := map[string]interface{}{
