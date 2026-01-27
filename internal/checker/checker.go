@@ -97,6 +97,13 @@ func (c *Checker) Check(domain string) models.DomainResult {
 		}
 	}
 
+	// SECOND: Check for premium domains (NOT truly available)
+	if strings.Contains(whoisLower, "premium") &&
+		(strings.Contains(whoisLower, "purchase") || strings.Contains(whoisLower, "contact")) {
+		result.Status = models.StatusTaken
+		return result
+	}
+
 	// THEN: Check if explicitly marked as available
 	for _, pattern := range availablePatterns {
 		if strings.Contains(whoisLower, pattern) {
@@ -128,7 +135,8 @@ func (c *Checker) checkDNS(domain string) models.DomainResult {
 				return result
 			}
 		}
-		result.Status = models.StatusAvailable
+		// Unknown DNS errors → assume taken (conservative)
+		result.Status = models.StatusTaken
 		return result
 	}
 
