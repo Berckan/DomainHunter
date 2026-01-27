@@ -27,13 +27,25 @@ func main() {
 	domainChecker := checker.New()
 	var allAvailable []models.DomainResult
 
-	// Scan 1-char domains only (36 names × 24 TLDs = 864 domains)
+	// Scan 1-char domains (36 names × 24 TLDs = 864 domains)
 	fmt.Println("Scanning 1-char domains across 24 TLDs...")
-	domains := checker.GenerateShortDomainsMultiTLD(1, "")
-	fmt.Printf("Checking %d domains...\n", len(domains))
+	domains1 := checker.GenerateShortDomainsMultiTLD(1, "")
+	fmt.Printf("Checking %d domains...\n", len(domains1))
 
-	results := domainChecker.CheckBulkHybrid(domains)
-	for _, r := range results {
+	results1 := domainChecker.CheckBulkHybrid(domains1)
+	for _, r := range results1 {
+		if r.Status == models.StatusAvailable {
+			allAvailable = append(allAvailable, r)
+		}
+	}
+
+	// Scan 2-char domains (1296 names × 24 TLDs = 31104 domains)
+	fmt.Println("\nScanning 2-char domains across 24 TLDs...")
+	domains2 := checker.GenerateShortDomainsMultiTLD(2, "")
+	fmt.Printf("Checking %d domains...\n", len(domains2))
+
+	results2 := domainChecker.CheckBulkHybrid(domains2)
+	for _, r := range results2 {
 		if r.Status == models.StatusAvailable {
 			allAvailable = append(allAvailable, r)
 		}

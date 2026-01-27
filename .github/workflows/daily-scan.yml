@@ -3,13 +3,13 @@ name: Daily Domain Scan
 on:
   schedule:
     # Runs at 10:00 AM Europe/Madrid every day (9:00 UTC)
-    - cron: '0 9 * * *'
+    - cron: "0 9 * * *"
   workflow_dispatch: # Allow manual trigger
 
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: "1.23"
 
       - name: Run daily scan
         env:
