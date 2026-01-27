@@ -97,9 +97,14 @@ func (c *Checker) Check(domain string) models.DomainResult {
 		}
 	}
 
-	// SECOND: Check for premium domains (NOT truly available)
-	if strings.Contains(whoisLower, "premium") &&
-		(strings.Contains(whoisLower, "purchase") || strings.Contains(whoisLower, "contact")) {
+	// SECOND: Check for premium/platinum reserved domains (NOT truly available)
+	if (strings.Contains(whoisLower, "premium") || strings.Contains(whoisLower, "platinum")) &&
+		(strings.Contains(whoisLower, "purchase") || strings.Contains(whoisLower, "contact") ||
+			strings.Contains(whoisLower, "offer") || strings.Contains(whoisLower, "reserved")) {
+		result.Status = models.StatusTaken
+		return result
+	}
+	if strings.Contains(whoisLower, "this name is reserved") {
 		result.Status = models.StatusTaken
 		return result
 	}
